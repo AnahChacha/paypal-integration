@@ -3,6 +3,7 @@ package com.pay.paypal.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pay.paypal.dbEntity.subscriptions.catalogProducts.CreateProducts;
 import com.pay.paypal.dtos.invoice.invoiceRequest.ItemsItem;
 import com.pay.paypal.dtos.invoice.invoiceRequest.*;
 import com.pay.paypal.dtos.invoice.invoiceResponse.CreateInvoiceResponse;
@@ -18,6 +19,7 @@ import com.pay.paypal.dtos.subscriptions.plans.plansRequest.*;
 import com.pay.paypal.dtos.subscriptions.plans.plansResponse.CreatePlansResponse;
 import com.pay.paypal.dtos.subscriptions.subscriptions.subscriptionsRequest.CreateSubscriptionsRequest;
 import com.pay.paypal.dtos.subscriptions.subscriptions.subscriptionsResponse.CreateSubscriptionsResponse;
+import com.pay.paypal.repository.CatalogRepository;
 import com.pay.paypal.tokens.AccessTokenResponse;
 import com.pay.paypal.tokens.ClientTokenRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Service
@@ -41,6 +44,7 @@ import java.util.List;
 public class PaypalServiceImpl implements PaypalService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final RestTemplate restTemplate = new RestTemplate();
+    private final CatalogRepository catalogRepository;
 
     @Value("${paypal.username}")
     private String username;
@@ -259,6 +263,19 @@ public class PaypalServiceImpl implements PaypalService {
         catalogRequest1.setType(catalogRequest.getType());
         catalogRequest1.setCategory(catalogRequest.getCategory());
 //        System.out.println("catalog product lists  ======= " + catalogRequest1);
+
+//        saving products details(catalog products)
+        CreateProducts products=new CreateProducts();
+        products.setHomeUrl(catalogRequest1.getHomeUrl());
+        products.setImageUrl(catalogRequest1.getImageUrl());
+        products.setName(catalogRequest1.getName());
+        products.setDescription(catalogRequest1.getDescription());
+        products.setProductId(UUID.randomUUID().toString());
+        products.setType(catalogRequest1.getType());
+        products.setCategory(catalogRequest1.getCategory());
+
+        catalogRepository.save(products);
+
 
         AccessTokenResponse accessTokenResponse = createAccessToken();
         HttpHeaders httpHeaders = new HttpHeaders();
